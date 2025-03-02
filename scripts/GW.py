@@ -20,12 +20,10 @@
 # | The code takes about 12 minutes to run on an L4 GPU [~38 dead points/second].
 
 import blackjax
-import blackjax.ns.adaptive
 import jax
 import jax.numpy as jnp
-import numpy as np
 import tqdm
-from anesthetic import NestedSamples
+
 from astropy.time import Time
 from jimgw.single_event.detector import H1, L1
 from jimgw.single_event.likelihood import original_likelihood as likelihood_function
@@ -52,38 +50,41 @@ gmst = Time(gps, format="gps").sidereal_time("apparent", "greenwich").rad
 columns = ["M_c", "q", "s1_z", "s2_z", "iota", "d_L", "t_c", "phase_c", "psi", "ra", "dec"]
 labels = [r"$M_c$", r"$q$", r"$s_{1z}$", r"$s_{2z}$", r"$\iota$", r"$d_L$", r"$t_c$", r"$\phi_c$", r"$\psi$", r"$\alpha$", r"$\delta$"]
 
-# | Define the prior function
-def logprior_fn(x):
-    M_c, q, s1_z, s2_z, iota, d_L, t_c, phase_c, psi, ra, dec = x.T
-    logprob = 0.0
-    logprob += jax.scipy.stats.uniform.logpdf(M_c, 10.0, 80.0-10.0)
-    logprob += jax.scipy.stats.uniform.logpdf(q, 0.125, 1.0-0.125)
-    logprob += jax.scipy.stats.uniform.logpdf(s1_z, -1.0, 1.0+1.0)
-    logprob += jax.scipy.stats.uniform.logpdf(s2_z, -1.0, 1.0+1.0)
-    logprob += jnp.log(jnp.sin(iota)/2.0) + jnp.where(iota < 0.0, -jnp.inf, 0.0) + jnp.where(iota > jnp.pi, -jnp.inf, 0.0)
-    logprob += jax.scipy.stats.beta.logpdf(d_L, 2.0, 2.0, 1.0, 2000.0-1.0)
-    logprob += jax.scipy.stats.uniform.logpdf(t_c, -0.05, 0.05+0.05)
-    logprob += jax.scipy.stats.uniform.logpdf(phase_c, 0.0, 2 * jnp.pi)
-    logprob += jax.scipy.stats.uniform.logpdf(psi, 0.0, 2 * jnp.pi)
-    logprob += jax.scipy.stats.uniform.logpdf(ra, 0.0, 2 * jnp.pi)
-    logprob += jnp.log(jnp.cos(dec)/2.0) + jnp.where(dec < -jnp.pi/2.0, -jnp.inf, 0.0) + jnp.where(dec > jnp.pi/2.0, -jnp.inf, 0.0)
-    return logprob
-
-# | Define the likelihood function
 @jax.jit
-def loglikelihood_fn(x):
-    params = dict(zip(columns, x.T))
-    params["eta"] = 0.15874815
-    params["gmst"] = gmst
-    waveform_sky = waveform(frequencies, params)
-    align_time = jnp.exp(-1j * 2 * jnp.pi * frequencies * (epoch + params["t_c"]))
-    return likelihood_function(
-        params,
-        waveform_sky,
-        detectors,
-        frequencies,
-        align_time,
-    )
+def loglikelihood_fn(params):
+    p = params.copy()
+    p["eta"] = p["q"] / (1 + p["q"])**2
+    p["gmst"] = gmst
+    waveform_sky = waveform(frequencies, p)
+    align_time = jnp.exp(-1j * 2 * jnp.pi * frequencies * (epoch + p["t_c"]))
+    return likelihood_function(p, waveform_sky, detectors, frequencies, align_time)
+
+# | Define the prior function
+
+M_c_min, M_c_max = 10.0, 80.0
+q_min, q_max = 0.125, 1.0
+d_L_min, d_L_max = 1.0, 2000.0
+t_c_min, t_c_max = -0.05, 0.05
+
+cosine_logprob = lambda x: jnp.where(jnp.abs(x) < jnp.pi/2, jnp.log(jnp.cos(x)/2.0), -jnp.inf)
+sine_logprob = lambda x: jnp.where((x >= 0.0) & (x <= jnp.pi), jnp.log(jnp.sin(x)/2.0), -jnp.inf)
+uniform_logprob = lambda x, a, b: jax.scipy.stats.uniform.logpdf(x, a, b-a)
+power_logprob = lambda x, n, a, b: jax.scipy.stats.beta.logpdf(x, n, n, loc=a, scale=b-a)
+
+def logprior_fn(p):
+    logprob = 0.0
+    logprob += uniform_logprob(p["M_c"], M_c_min, M_c_max)
+    logprob += uniform_logprob(p["q"], q_min, q_max)
+    logprob += uniform_logprob(p["s1_z"], -1.0, 1.0)
+    logprob += uniform_logprob(p["s2_z"], -1.0, 1.0)
+    logprob += sine_logprob(p["iota"])
+    logprob += power_logprob(p["d_L"], 2.0, d_L_min, d_L_max)
+    logprob += uniform_logprob(p["t_c"], t_c_min, t_c_max)
+    logprob += uniform_logprob(p["phase_c"], 0.0, 2 * jnp.pi)
+    logprob += uniform_logprob(p["psi"], 0.0, 2 * jnp.pi)
+    logprob += uniform_logprob(p["ra"], 0.0, 2 * jnp.pi)
+    logprob += cosine_logprob(p["dec"])
+    return logprob
 
 # | Define the Nested Sampling algorithm
 n_dims = len(columns)
@@ -91,13 +92,36 @@ n_live = 1000
 n_delete = 500
 num_mcmc_steps = n_dims * 3
 
+# | Sample live points from the prior
+rng_key = jax.random.PRNGKey(0)
+rng_key, init_key = jax.random.split(rng_key, 2)
+init_keys = jax.random.split(init_key, n_dims)
+particles = {
+    "M_c": jax.random.uniform(init_keys[0], (n_live,), minval=M_c_min, maxval=M_c_max),
+    "q": jax.random.uniform(init_keys[1], (n_live,), minval=q_min, maxval=q_max),
+    "s1_z": jax.random.uniform(init_keys[2], (n_live,), minval=-1.0, maxval=1.0),
+    "s2_z": jax.random.uniform(init_keys[3], (n_live,), minval=-1.0, maxval=1.0),
+    "iota": 2 * jnp.arcsin(jax.random.uniform(init_keys[4], (n_live,))**0.5),
+    "d_L": jax.random.beta(init_keys[5], 2.0, 2.0, shape=(n_live,)) * (d_L_max - d_L_min) + d_L_min,
+    "t_c": jax.random.uniform(init_keys[6], (n_live,), minval=t_c_min, maxval=t_c_max),
+    "phase_c": jax.random.uniform(init_keys[7], (n_live,), minval=0.0, maxval=2 * jnp.pi),
+    "psi": jax.random.uniform(init_keys[8], (n_live,), minval=0.0, maxval=2 * jnp.pi),
+    "ra": jax.random.uniform(init_keys[9], (n_live,), minval=0.0, maxval=2 * jnp.pi),
+    "dec": 2 * jnp.arcsin(jax.random.uniform(init_keys[10], (n_live,))**0.5) - jnp.pi/2.0,
+}
+
+_, ravel_fn = jax.flatten_util.ravel_pytree({k: v[0] for k, v in particles.items()})
+
 # | Initialize the Nested Sampling algorithm
 nested_sampler = blackjax.ns.adaptive.nss(
     logprior_fn=logprior_fn,
     loglikelihood_fn=loglikelihood_fn,
     n_delete=n_delete,
     num_mcmc_steps=num_mcmc_steps,
+    ravel_fn=ravel_fn,
 )
+
+state = nested_sampler.init(particles, loglikelihood_fn)
 
 @jax.jit
 def one_step(carry, xs):
@@ -105,26 +129,6 @@ def one_step(carry, xs):
     k, subk = jax.random.split(k, 2)
     state, dead_point = nested_sampler.step(subk, state)
     return (state, k), dead_point
-
-# | Sample live points from the prior
-rng_key = jax.random.PRNGKey(0)
-rng_key, init_key = jax.random.split(rng_key, 2)
-init_keys = jax.random.split(init_key, 11)
-
-M_c = jax.random.uniform(init_keys[0], (n_live,), minval=10.0, maxval=80.0)
-q = jax.random.uniform(init_keys[1], (n_live,), minval=0.125, maxval=1.0)
-s1_z = jax.random.uniform(init_keys[2], (n_live,), minval=-1.0, maxval=1.0)
-s2_z = jax.random.uniform(init_keys[3], (n_live,), minval=-1.0, maxval=1.0)
-iota = 2*jnp.arcsin(jax.random.uniform(init_keys[4], (n_live,))**0.5)
-d_L = jax.random.beta(init_keys[5], 2.0, 2.0, (n_live,))*(2000.0-1.0)+1.0
-t_c = jax.random.uniform(init_keys[6], (n_live,), minval=-0.05, maxval=0.05)
-phase_c = jax.random.uniform(init_keys[7], (n_live,), minval=0.0, maxval=2 * jnp.pi)
-psi = jax.random.uniform(init_keys[8], (n_live,), minval=0.0, maxval=2 * jnp.pi)
-ra = jax.random.uniform(init_keys[9], (n_live,), minval=0.0, maxval=2 * jnp.pi)
-dec = 2*jnp.arcsin(jax.random.uniform(init_keys[10], (n_live,))**0.5)-jnp.pi/2.0
-
-initial_particles = jnp.vstack([M_c, q, s1_z, s2_z, iota, d_L, t_c, phase_c, psi, ra, dec]).T
-state = nested_sampler.init(initial_particles, loglikelihood_fn)
 
 # | Run Nested Sampling
 dead = []
@@ -135,13 +139,20 @@ with tqdm.tqdm(desc="Dead points", unit=" dead points") as pbar:
         pbar.update(n_delete)  # Update progress bar
 
 # | anesthetic post-processing
+from anesthetic import NestedSamples
+import numpy as np
 dead = jax.tree.map(
         lambda *args: jnp.reshape(jnp.stack(args, axis=0), 
                                   (-1,) + args[0].shape[1:]),
         *dead)
 live = state.sampler_state
+
 logL = np.concatenate((dead.logL, live.logL), dtype=float)
 logL_birth = np.concatenate((dead.logL_birth, live.logL_birth), dtype=float)
-data = np.concatenate((dead.particles, live.particles), dtype=float)
+data = np.concatenate([
+    np.column_stack([v for v in dead.particles.values()]),
+    np.column_stack([v for v in live.particles.values()])
+    ], axis=0)
+
 samples = NestedSamples(data, logL=logL, logL_birth=logL_birth, columns=columns, labels=labels)
 samples.to_csv('GW.csv')
