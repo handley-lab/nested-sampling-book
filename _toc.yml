@@ -11,6 +11,9 @@ parts:
   - caption: Physics examples
     chapters:
     - file: physics/physics.md
+  - caption: Supernovae Light Curves
+    chapters:
+    - file: scripts/supernovae.ipynb
   - caption: Appendix
     chapters:
     - file: contributors.md
