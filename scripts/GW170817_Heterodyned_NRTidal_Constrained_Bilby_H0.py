@@ -1,5 +1,3 @@
-# pip install git+https://github.com/ming-256/jim
-
 import blackjax
 import blackjax.ns.adaptive
 import jax
@@ -50,7 +48,7 @@ def FlatInLogPrior(x: float, min: float, max: float) -> float:
     return -jnp.log(jnp.log(max / min)) - jnp.log(x)
 
 jax.config.update('jax_enable_x64', True) 
-label = 'Z_GW170817_Heterodyned_NRTidal_Constrained_Bilby_H0'
+label = 'Z_GW170817_Heterodyned_NRTidal_Constrained_Bilby_H0_2'
 
 # | Define LIGO event data
 gps = 1187008882.43
@@ -67,7 +65,7 @@ psd_duration = 1024
 
 detectors = [H1, L1, V1]
 for det in detectors:
-    det.load_data(gps, duration - post_trigger_duration, post_trigger_duration, fmin, fmax, psd_pad=psd_pad, psd_duration=psd_duration, tukey_alpha=tukey_alpha, gwpy_kwargs={"cache": True, "version": 2})
+    det.load_data_2(gps, duration - post_trigger_duration, post_trigger_duration, fmin, fmax, psd_pad=psd_pad, psd_duration=psd_duration, tukey_alpha=tukey_alpha, gwpy_kwargs={"cache": True, "version": 2})
 
 
 waveform = RippleIMRPhenomD_NRTidalv2(f_ref=fmin, use_lambda_tildes=False, no_taper=False)
@@ -523,20 +521,19 @@ likelihood_function = HeterodynedLikelihood(detectors, waveform, frequencies, ep
 # | Extra check on M1 < M2 to catch points that slipped through
 @jax.jit
 def loglikelihood_fn(x):
-    M_1, M_2, *rest = x.T
     params = dict(zip(parameter_names, x.T))
     params["eta"] = params["q"] / (1 + params["q"]) ** 2
 
-    ll_vr = jax.scipy.stats.norm.logpdf(3327, params["v_p"] + params["H_0"] * params["d_L"], 72)
-    ll_vp = jax.scipy.stats.norm.logpdf(310, params["v_p"], 150)
+    ll_vr = stats.norm.logpdf(3327, params["v_p"] + params["H_0"] * params["d_L"], 72)
+    ll_vp = stats.norm.logpdf(310, params["v_p"], 150)
 
     return likelihood_function.evaluate(params) + ll_vr + ll_vp
 
 # | Define the Nested Sampling algorithm
 n_dims = len(parameter_names)
-n_live = 10000
-n_delete = 5000
-num_mcmc_steps = n_dims * 5
+n_live = 4000
+n_delete = 2000
+num_mcmc_steps = n_dims * 6
 
 # | Initialize the Nested Sampling algorithm
 nested_sampler = blackjax.ns.adaptive.nss(
