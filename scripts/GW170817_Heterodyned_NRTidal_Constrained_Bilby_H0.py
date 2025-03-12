@@ -1,3 +1,5 @@
+# pip install git+https://github.com/ming-256/jim
+
 import blackjax
 import blackjax.ns.adaptive
 import jax
@@ -65,7 +67,7 @@ psd_duration = 1024
 
 detectors = [H1, L1, V1]
 for det in detectors:
-    det.load_data_2(gps, duration - post_trigger_duration, post_trigger_duration, fmin, fmax, psd_pad=psd_pad, psd_duration=psd_duration, tukey_alpha=tukey_alpha, gwpy_kwargs={"cache": True, "version": 2})
+    det.load_data(gps, duration - post_trigger_duration, post_trigger_duration, fmin, fmax, psd_pad=psd_pad, psd_duration=psd_duration, tukey_alpha=tukey_alpha, gwpy_kwargs={"cache": True, "version": 2})
 
 
 waveform = RippleIMRPhenomD_NRTidalv2(f_ref=fmin, use_lambda_tildes=False, no_taper=False)
