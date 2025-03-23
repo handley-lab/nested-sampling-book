@@ -1,6 +1,6 @@
 # Contributors and Citations
 
-# Contributors
+## Contributors
 
 - Basic
     - Quickstart - https://github.com/yallup
@@ -11,7 +11,7 @@
     - Supernovae Light Curve Fittting - https://github.com/samleeney
 
 
-# Citations
+## Citations
 
 ```{bibliography}
 ```
