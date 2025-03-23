@@ -8,12 +8,12 @@ parts:
     chapters:
     - file: basic/quickstart.ipynb
     - file: basic/basic.ipynb
+  - caption: Advanced
+    chapters:
+    - file: advanced/GP.ipynb
   - caption: Physics examples
     chapters:
-    - file: physics/physics.md
-  - caption: Supernovae Light Curves
-    chapters:
-    - file: scripts/supernovae.ipynb
+    - file: physics/supernovae.ipynb
   - caption: Appendix
     chapters:
     - file: contributors.md
