@@ -22,10 +22,10 @@ rng_key = jax.random.PRNGKey(0)
 
 
 X = jnp.linspace(start=0, stop=10, num=500)
-true_weights = jnp.array([1.0, 0.5])
-true_freqs = jnp.array([0.3, 1.0])
-data_set_size = 20
-noise_level = 0.1
+true_weights = jnp.array([1.5, 1.0])
+true_freqs = jnp.array([0.1, 1.0])
+data_set_size = 100
+noise_level = 0.2
 
 
 def model(theta, x):
@@ -48,30 +48,30 @@ X_train, y_train = X[training_indices], y[training_indices]
 
 y_train = y_train + jax.random.normal(noise_key, y_train.shape) * noise_level
 
-# fig, ax = plt.subplots(figsize=(8, 6))
+fig, ax = plt.subplots(figsize=(8, 6))
 
-# # Plot on the axis object instead of using plt directly
-# ax.plot(X, y, label=r"$f(x)$", linestyle="dotted")
-# ax.errorbar(
-#     X_train,
-#     y_train,
-#     yerr=noise_level,
-#     fmt="o",
-#     capsize=3,
-#     label="Noisy observations",
-#     color="black",
-# )
-# ax.legend()
-# ax.set_xlabel("$x$")
-# ax.set_ylabel("$f(x)$")
-# ax.set_title("True generative process")
+# Plot on the axis object instead of using plt directly
+ax.plot(X, y, label=r"$f(x)$", linestyle="dotted")
+ax.errorbar(
+    X_train,
+    y_train,
+    yerr=noise_level,
+    fmt="o",
+    capsize=3,
+    label="Noisy observations",
+    color="black",
+)
+ax.legend()
+ax.set_xlabel("$x$")
+ax.set_ylabel("$f(x)$")
+ax.set_title("True generative process")
 
-# # Save the figure
-# fig.savefig(
-#     os.path.join("figures", "generative_process.png"),
-#     dpi=300,
-#     bbox_inches="tight",
-# )
+# Save the figure
+fig.savefig(
+    os.path.join("figures", "generative_process.png"),
+    dpi=300,
+    bbox_inches="tight",
+)
 
 
 fundamental_freq = 1 / (X.max() - X.min())
@@ -80,10 +80,10 @@ sampling_freq = X.shape[0] * fundamental_freq
 
 @jax.jit
 def loglikelihood(theta):
-    return -jnp.sum(
-        0.5 * (model(theta, x=X_train) - y_train) ** 2 / theta["noise"] ** 2
-        + jnp.log(2 * jnp.pi * theta["noise"] ** 2)
-    )
+    n = len(y_train)
+    return -0.5 * jnp.sum(
+        (model(theta, x=X_train) - y_train) ** 2 / theta["noise"] ** 2
+    ) #- 0.5 * n * jnp.log(2 * jnp.pi * theta["noise"] ** 2)
 
 
 def build_prior(n_components):
@@ -178,8 +178,9 @@ def integrate(nested_sampler, rng_key, sort=False):
 
             dead.append(dead_info)
             pbar.update(n_delete)
-
-    return state, finalise(state, dead)
+    res = (state, finalise(state, dead))
+    print("total evals:", res[1].update_info.evals.sum())
+    return res
 
 
 def plot(rng_key, final):
@@ -321,10 +322,17 @@ nested_sampler = blackjax.ns.adaptive.nss(
     # stepper=wrapped_stepper,
 )
 
-# if sort:
-#         idx = jnp.argsort(particles["freq"])
-#         particles["freq"] = jnp.take_along_axis(particles["freq"], idx, -1)
-#         particles["weight"] = jnp.take_along_axis(particles["weight"], idx, -1)
+prior_1, _ = build_prior(1)
+augment_points = prior_1.sample(seed=rng_key, sample_shape=(n_live,))
+
+initial_particles_bf["weight"] = jnp.concatenate(
+    [initial_particles_bf["weight"], augment_points["weight"]], axis=-1
+)
+initial_particles_bf["freq"] = jnp.concatenate(
+    [initial_particles_bf["freq"], augment_points["freq"]], axis=-1
+)
+# initial_particles_bf["noise"] = augment_points["noise"]
+
 
 state = nested_sampler.init(
     initial_particles_bf,
@@ -341,12 +349,24 @@ def one_step(carry, xs):
 
 
 dead = []
+
 with tqdm.tqdm(desc="Dead points", unit=" dead points") as pbar:
     while not state.sampler_state.logZ_live - state.sampler_state.logZ < -3:
         (state, rng_key), dead_info = one_step((state, rng_key), None)
-        # (state, rng_key), dead_info = multi_steps((state, rng_key), None)
 
         dead.append(dead_info)
         pbar.update(n_delete)
 
-state, finalise(state, dead)
+fs = finalise(state, dead)
+print("total evals:", fs.update_info.evals.sum())
+print("logZ:", state.sampler_state.logZ)
+from anesthetic import NestedSamples
+
+samples = NestedSamples(
+    data=jnp.concatenate(
+        [fs.particles["freq"], fs.particles["noise"][..., None]], axis=-1
+    ),
+    logL=fs.logL,
+    logL_birth=fs.logL_birth,
+)
+samples.to_csv("BF.csv")
