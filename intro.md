@@ -37,12 +37,12 @@ as well as the pending implementation paper {cite}`yallup2025nested`
 
 ```latex
 @inproceedings{
-yallup2025nested,
-title={Nested Slice Sampling},
-author={David Yallup and Namu Kroupa and Will Handley},
-booktitle={Frontiers in Probabilistic Inference: Learning meets Sampling},
-year={2025},
-url={https://openreview.net/forum?id=ekbkMSuPo4}
+    yallup2025nested,
+    title={Nested Slice Sampling},
+    author={David Yallup and Namu Kroupa and Will Handley},
+    booktitle={Frontiers in Probabilistic Inference: Learning meets Sampling},
+    year={2025},
+    url={https://openreview.net/forum?id=ekbkMSuPo4}
 }
 ```
 
