@@ -11,10 +11,10 @@ Following the example of the main `blackjax` library of having a separate pedago
 
 ## Installation
 
-For now the core library code is available as a fork of blackjax on the handley-lab github (https://github.com/handley-lab/blackjax), specifically the `proposal` branch.
+For now the core library code is available as a fork of blackjax on the handley-lab github (https://github.com/handley-lab/blackjax), specifically the `nested_sampling` branch.
 
 ```bash
-pip install git+https://github.com/handley-lab/blackjax@proposal
+pip install git+https://github.com/handley-lab/blackjax@nested_sampling
 ```
 
 All other non-standard dependencies in the examples contained in this book are listed in the notebooks themselves.
@@ -36,13 +36,13 @@ Usage of the core algorithm should cite both the `blackjax` repo {cite}`cabezas2
 as well as the pending implementation paper {cite}`yallup2025nested`
 
 ```latex
-@misc{yallup2025nested,
-    author = {David Yallup and Will Handley},
-    title = {Nested Slice Sampling},
-    year={2025},
-    eprint={2502.XXXX},
-    archivePrefix={arXiv},
-    primaryClass={stat.ML},
+@inproceedings{
+yallup2025nested,
+title={Nested Slice Sampling},
+author={David Yallup and Namu Kroupa and Will Handley},
+booktitle={Frontiers in Probabilistic Inference: Learning meets Sampling},
+year={2025},
+url={https://openreview.net/forum?id=ekbkMSuPo4}
 }
 ```
 
