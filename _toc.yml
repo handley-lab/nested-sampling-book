@@ -11,6 +11,7 @@ parts:
   - caption: Advanced
     chapters:
     - file: advanced/GP.ipynb
+    - file: advanced/RW_NS.ipynb
   - caption: Physics examples
     chapters:
     - file: physics/supernovae.ipynb
