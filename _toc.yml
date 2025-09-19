@@ -8,6 +8,10 @@ parts:
     chapters:
     - file: basic/quickstart.ipynb
     - file: basic/basic.ipynb
+  - caption: Language Integrations
+    chapters:
+    - file: integrations/pytorch.ipynb
+    - file: integrations/c.ipynb
   - caption: Advanced
     chapters:
     - file: advanced/GP.ipynb
