@@ -13,6 +13,7 @@ parts:
     - file: integrations/pytorch.ipynb
     - file: integrations/c.ipynb
     - file: integrations/cpp.ipynb
+    - file: integrations/fortran.ipynb
   - caption: Advanced
     chapters:
     - file: advanced/GP.ipynb
