@@ -15,6 +15,7 @@ parts:
     - file: integrations/cpp.ipynb
     - file: integrations/fortran.ipynb
     - file: integrations/r.ipynb
+    - file: integrations/julia.ipynb
   - caption: Advanced
     chapters:
     - file: advanced/GP.ipynb
