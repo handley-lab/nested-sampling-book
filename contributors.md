@@ -7,6 +7,7 @@
     - Basic Usage - https://github.com/yallup
 - Language Integrations - https://github.com/williamjameshandley
     - PyTorch Integration
+    - Numba Integration
     - C Integration
     - C++ Integration
     - Fortran Integration

@@ -11,6 +11,7 @@ parts:
   - caption: Language Integrations
     chapters:
     - file: integrations/pytorch.ipynb
+    - file: integrations/numba.ipynb
     - file: integrations/c.ipynb
     - file: integrations/cpp.ipynb
     - file: integrations/fortran.ipynb
