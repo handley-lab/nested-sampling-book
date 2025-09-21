@@ -8,6 +8,9 @@
 - Language Integrations - https://github.com/williamjameshandley
     - PyTorch Integration
     - Numba Integration
+    - NumPy/SciPy Integration
+    - TensorFlow Integration
+    - CuPy Integration
     - C Integration
     - C++ Integration
     - Fortran Integration

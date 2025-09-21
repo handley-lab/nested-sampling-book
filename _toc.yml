@@ -12,6 +12,9 @@ parts:
     chapters:
     - file: integrations/pytorch.ipynb
     - file: integrations/numba.ipynb
+    - file: integrations/numpy_scipy.ipynb
+    - file: integrations/tensorflow.ipynb
+    - file: integrations/cupy.ipynb
     - file: integrations/c.ipynb
     - file: integrations/cpp.ipynb
     - file: integrations/fortran.ipynb
