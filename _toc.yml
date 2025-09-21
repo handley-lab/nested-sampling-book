@@ -27,6 +27,9 @@ parts:
   - caption: Physics examples
     chapters:
     - file: physics/supernovae.ipynb
+  - caption: Simulation-Based Inference
+    chapters:
+    - file: sbi/nle_posterior.ipynb
   - caption: Appendix
     chapters:
     - file: contributors.md
