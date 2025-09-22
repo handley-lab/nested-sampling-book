@@ -20,16 +20,19 @@ parts:
     - file: integrations/fortran.ipynb
     - file: integrations/r.ipynb
     - file: integrations/julia.ipynb
-  - caption: Advanced
+  - caption: Simple examples
     chapters:
-    - file: advanced/GP.ipynb
-    - file: advanced/RW_NS.ipynb
+    - file: basic/line_fitting.ipynb
   - caption: Physics examples
     chapters:
     - file: physics/supernovae.ipynb
   - caption: Simulation-Based Inference
     chapters:
     - file: sbi/nle_posterior.ipynb
+  - caption: Advanced
+    chapters:
+    - file: advanced/GP.ipynb
+    - file: advanced/RW_NS.ipynb
   - caption: Appendix
     chapters:
     - file: contributors.md
