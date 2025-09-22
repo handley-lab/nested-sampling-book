@@ -8,31 +8,27 @@ parts:
     chapters:
     - file: basic/quickstart.ipynb
     - file: basic/basic.ipynb
-  - caption: Language Integrations
-    chapters:
-    - file: integrations/pytorch.ipynb
-    - file: integrations/numba.ipynb
-    - file: integrations/numpy_scipy.ipynb
-    - file: integrations/tensorflow.ipynb
-    - file: integrations/cupy.ipynb
-    - file: integrations/c.ipynb
-    - file: integrations/cpp.ipynb
-    - file: integrations/fortran.ipynb
-    - file: integrations/r.ipynb
-    - file: integrations/julia.ipynb
-  - caption: Simple examples
-    chapters:
     - file: basic/line_fitting.ipynb
-  - caption: Physics examples
-    chapters:
-    - file: physics/supernovae.ipynb
-  - caption: Simulation-Based Inference
-    chapters:
-    - file: sbi/nle_posterior.ipynb
   - caption: Advanced
     chapters:
     - file: advanced/GP.ipynb
     - file: advanced/RW_NS.ipynb
+    - file: sbi/nle_posterior.ipynb
+    - file: integrations/index
+      sections:
+      - file: integrations/pytorch.ipynb
+      - file: integrations/numba.ipynb
+      - file: integrations/numpy_scipy.ipynb
+      - file: integrations/tensorflow.ipynb
+      - file: integrations/cupy.ipynb
+      - file: integrations/c.ipynb
+      - file: integrations/cpp.ipynb
+      - file: integrations/fortran.ipynb
+      - file: integrations/r.ipynb
+      - file: integrations/julia.ipynb
+  - caption: Physics examples
+    chapters:
+    - file: physics/supernovae.ipynb
   - caption: Appendix
     chapters:
     - file: contributors.md
