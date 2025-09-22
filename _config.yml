@@ -19,6 +19,14 @@ latex:
 bibtex_bibfiles:
   - references.bib
 
+# Sphinx extensions
+sphinx:
+  extra_extensions:
+    - sphinx_sitemap
+  config:
+    html_baseurl: https://handley-lab.github.io/nested-sampling-book/  # Required for sitemap generation
+    sitemap_url_scheme: "{link}"
+
 # Information about where the book exists on the web
 repository:
   url: https://github.com/handley-lab/nested-sampling-book  # Online location of your book
