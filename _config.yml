@@ -31,3 +31,4 @@ html:
   baseurl: /nested-sampling-book/
   use_issues_button: true
   use_repository_button: true
+  use_download_button: true  # Enable download button for raw .ipynb/.md files
