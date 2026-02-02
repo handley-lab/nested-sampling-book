@@ -13,7 +13,7 @@
 # | source venv/bin/activate
 # | pip install git+https://git.ligo.org/lscsoft/ligo-segments.git
 # | pip install git+https://github.com/kazewong/jim
-# | pip install git+https://github.com/handley-lab/blackjax@proposal
+# | pip install git+https://github.com/handley-lab/blackjax.git@v0.1.0-beta
 # | pip install anesthetic
 # | python GW.py
 # |```

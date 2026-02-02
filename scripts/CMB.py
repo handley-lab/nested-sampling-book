@@ -15,7 +15,7 @@
 # | python -m venv venv
 # | source venv/bin/activate
 # | pip install tqdm numpy jax anesthetic cosmopower_jax
-# | pip install git+https://github.com/handley-lab/blackjax@nested_sampling
+# | pip install git+https://github.com/handley-lab/blackjax.git@v0.1.0-beta
 # | python CMB.py
 # |```
 # | The code takes about 90s to run on an L4 GPU (~250 dead points/second).

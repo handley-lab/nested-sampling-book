@@ -3,7 +3,7 @@ name = "nested-sampling-book"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.10"
 dependencies = [
     "anesthetic>=2.10.3",
     "blackjax",
@@ -16,8 +16,8 @@ dependencies = [
     "optax>=0.2.4",
     "sbi>=0.25.0",
     "tensorflow-probability>=0.25.0",
-    "torch>=2.5.1",
+    "torch",
 ]
 
 [tool.uv.sources]
-blackjax = { git = "https://github.com/handley-lab/blackjax", rev = "nested_sampling" }
+blackjax = { git = "https://github.com/handley-lab/blackjax.git", tag = "v0.1.0-beta" }
