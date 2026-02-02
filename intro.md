@@ -2,19 +2,23 @@
 
 Nested Sampling is a particle Monte Carlo algorithm that has seen widespread usage in the physical sciences. Its popular implementations have often been performed in bespoke packages, which hinders wider adoption and generic comparison.
 
-The work of {cite}`yallup2025nested` presented the atomic components of the Nested Sampling paradigm in the style of the popular `jax` based sampling library `blackjax`. This has a number of benefits, including:
+The work of {cite}`yallup2026nested` presented the atomic components of the Nested Sampling paradigm in the style of the popular `jax` based sampling library `blackjax`. This has a number of benefits, including:
 - Compatibility of the atomic components with modern python PPLs such as [numpyro](https://num.pyro.ai/en/latest/index.html#)
 - Clear separation of design choices from core algorithm, allowing advanced experimentation with composable components
 - Unique compatibility with natively vectorized likelihood code.
 
 Following the example of the main `blackjax` library of having a separate pedagogical sampling book, we introduce in these pages the _nested sampling book_, aiming to provide physics motivated use cases focussing on the nested sampling algorithm.
 
+```{note}
+**Upstream merge in progress.** The nested sampling implementation is being merged into the main [BlackJAX repository](https://github.com/blackjax-devs/blackjax). Once complete, installation will simply be `pip install blackjax`. For the most up-to-date usage examples compatible with the main branch, see [github.com/yallup/nss](https://github.com/yallup/nss).
+```
+
 ## Installation
 
-For now the core library code is available as a fork of blackjax on the handley-lab github (https://github.com/handley-lab/blackjax), specifically the `nested_sampling` branch.
+For now the core library code is available as a fork of blackjax on the handley-lab github (https://github.com/handley-lab/blackjax), specifically the `v0.1.0-beta` tag. This tag is provided for continuity while the merge into the main blackjax repository is in progress.
 
 ```bash
-pip install git+https://github.com/handley-lab/blackjax@nested_sampling
+pip install git+https://github.com/handley-lab/blackjax.git@v0.1.0-beta
 ```
 
 All other non-standard dependencies in the examples contained in this book are listed in the notebooks themselves.
@@ -33,16 +37,17 @@ Usage of the core algorithm should cite both the `blackjax` repo {cite}`cabezas2
 }
 ```
 
-as well as the pending implementation paper {cite}`yallup2025nested`
+as well as the implementation paper {cite}`yallup2026nested`
 
 ```latex
-@inproceedings{
-    yallup2025nested,
-    title={Nested Slice Sampling},
-    author={David Yallup and Namu Kroupa and Will Handley},
-    booktitle={Frontiers in Probabilistic Inference: Learning meets Sampling},
-    year={2025},
-    url={https://openreview.net/forum?id=ekbkMSuPo4}
+@misc{yallup2026nested,
+      title={Nested Slice Sampling: Vectorized Nested Sampling for GPU-Accelerated Inference},
+      author={David Yallup and Namu Kroupa and Will Handley},
+      year={2026},
+      eprint={2601.23252},
+      archivePrefix={arXiv},
+      primaryClass={stat.CO},
+      url={https://arxiv.org/abs/2601.23252},
 }
 ```
 

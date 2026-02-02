@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is a Jupyter Book repository containing educational notebooks demonstrating nested sampling algorithms from the BlackJAX library. The book focuses on physics-motivated use cases and provides pedagogical examples of nested sampling implementations.
 
-The repository uses the nested sampling fork of BlackJAX from: https://github.com/handley-lab/blackjax (branch: `nested_sampling`)
+The repository uses the nested sampling fork of BlackJAX from: https://github.com/handley-lab/blackjax (tag: `v0.1.0-beta`). This tag is for continuity while the merge into the main blackjax repository is in progress.
 
 ## Common Development Commands
 
@@ -26,7 +26,7 @@ jb build .
 ### Installation
 ```bash
 # Install the nested sampling fork of BlackJAX
-pip install git+https://github.com/handley-lab/blackjax@nested_sampling
+pip install git+https://github.com/handley-lab/blackjax.git@v0.1.0-beta
 
 # Install visualization dependencies (for examples)
 pip install anesthetic
