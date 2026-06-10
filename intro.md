@@ -40,14 +40,13 @@ Usage of the core algorithm should cite both the `blackjax` repo {cite}`cabezas2
 as well as the implementation paper {cite}`yallup2026nested`
 
 ```latex
-@misc{yallup2026nested,
-      title={Nested Slice Sampling: Vectorized Nested Sampling for GPU-Accelerated Inference},
-      author={David Yallup and Namu Kroupa and Will Handley},
-      year={2026},
-      eprint={2601.23252},
-      archivePrefix={arXiv},
-      primaryClass={stat.CO},
-      url={https://arxiv.org/abs/2601.23252},
+@article{yallup2026nested,
+    title={Nested Slice Sampling: Vectorized Nested Sampling for {GPU}-Accelerated Inference},
+    author={David Yallup and Namu Kroupa and Will Handley},
+    journal={Transactions on Machine Learning Research},
+    issn={2835-8856},
+    year={2026},
+    url={https://openreview.net/forum?id=5mF2eRl3gt},
 }
 ```
 
