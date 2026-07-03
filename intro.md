@@ -7,19 +7,25 @@ The work of {cite}`yallup2026nested` presented the atomic components of the Nest
 - Clear separation of design choices from core algorithm, allowing advanced experimentation with composable components
 - Unique compatibility with natively vectorized likelihood code.
 
-Following the example of the main `blackjax` library of having a separate pedagogical sampling book, we introduce in these pages the _nested sampling book_, aiming to provide physics motivated use cases focussing on the nested sampling algorithm.
+Following the example of the main `blackjax` library, which maintains a separate pedagogical [Sampling Book](https://blackjax-devs.github.io/sampling-book/), we introduce in these pages the _nested sampling book_, aiming to provide physics motivated use cases focussing on the nested sampling algorithm.
 
 ```{note}
-**Upstream merge in progress.** The nested sampling implementation is being merged into the main [BlackJAX repository](https://github.com/blackjax-devs/blackjax). Once complete, installation will simply be `pip install blackjax`. For the most up-to-date usage examples compatible with the main branch, see [github.com/yallup/nss](https://github.com/yallup/nss).
+**Now upstreamed into BlackJAX.** The nested sampling implementation now lives in the main [BlackJAX repository](https://github.com/blackjax-devs/blackjax), in the [`blackjax.ns`](https://github.com/blackjax-devs/blackjax/tree/main/blackjax/ns) subpackage (top-level entry points `blackjax.nss` and `blackjax.nsswig`). It has not yet appeared in a tagged PyPI release, so for now it must be installed from the `main` branch with `git` — see the Installation section below.
+
+BlackJAX's own Sampling Book contains a complementary [Nested Sampling chapter](https://blackjax-devs.github.io/sampling-book/algorithms/nested-sampling/) that introduces `blackjax.nss` and contrasts it with tempered SMC on multimodal and phase-transition targets. That page and this book are companions: it motivates the algorithm against the other samplers in BlackJAX, while these pages focus on physics-motivated use cases and the [anesthetic](https://anesthetic.readthedocs.io/) post-processing workflow.
 ```
 
 ## Installation
 
-For now the core library code is available as a fork of blackjax on the handley-lab github (https://github.com/handley-lab/blackjax), specifically the `v0.1.0-beta` tag. This tag is provided for continuity while the merge into the main blackjax repository is in progress.
+The nested sampling code is part of the main BlackJAX repository but has not yet been published in a tagged PyPI release, so for now install it directly from the `main` branch. This requires `git`:
 
 ```bash
-pip install git+https://github.com/handley-lab/blackjax.git@v0.1.0-beta
+pip install git+https://github.com/blackjax-devs/blackjax.git
 ```
+
+Once a release including the `blackjax.ns` subpackage is published to PyPI, this will simplify to `pip install blackjax`.
+
+If you have code written against the older `handley-lab/blackjax` fork (tag `v0.1.0-beta`), the [Backwards Compatibility](legacy/quickstart.ipynb) page preserves the old Quickstart and tabulates the (small) API differences.
 
 All other non-standard dependencies in the examples contained in this book are listed in the notebooks themselves.
 

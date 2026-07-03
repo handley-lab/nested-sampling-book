@@ -12,7 +12,8 @@ parts:
       title: Best Practices
   - caption: Advanced
     chapters:
-    - file: advanced/GP.ipynb
+    - file: advanced/supernest.ipynb
+      title: Posterior Repartitioning
     - file: advanced/RW_NS.ipynb
     - file: sbi/nle_posterior.ipynb
       title: Simulation-Based Inference
@@ -24,4 +25,6 @@ parts:
     - file: physics/supernovae.ipynb
   - caption: Appendix
     chapters:
+    - file: legacy/quickstart.ipynb
+      title: Backwards Compatibility
     - file: contributors.md
