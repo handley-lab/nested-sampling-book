@@ -15,7 +15,7 @@
 # | python -m venv venv
 # | source venv/bin/activate
 # | pip install tqdm numpy jax anesthetic cosmopower_jax
-# | pip install git+https://github.com/handley-lab/blackjax.git@v0.1.0-beta
+# | pip install git+https://github.com/blackjax-devs/blackjax.git
 # | python CMB.py
 # |```
 # | The code takes about 90s to run on an L4 GPU (~250 dead points/second).
@@ -107,11 +107,11 @@ n_delete = 500
 num_mcmc_steps = n_dims * 3
 
 # | Initialize the Nested Sampling algorithm
-nested_sampler = blackjax.ns.adaptive.nss(
+nested_sampler = blackjax.nss(
     logprior_fn=logprior_fn,
     loglikelihood_fn=loglikelihood_fn,
-    n_delete=n_delete,
-    num_mcmc_steps=num_mcmc_steps,
+    num_delete=n_delete,
+    num_inner_steps=num_mcmc_steps,
 )
 
 
@@ -131,27 +131,23 @@ initial_particles = (
     jax.random.uniform(init_key, (n_live, n_dims)) * (parammax - parammin)
     + parammin
 )
-state = nested_sampler.init(initial_particles, loglikelihood_fn)
+state = nested_sampler.init(initial_particles)
 
 # | Run Nested Sampling
 dead = []
 with tqdm.tqdm(desc="Dead points", unit=" dead points") as pbar:
-    while not state.sampler_state.logZ_live - state.sampler_state.logZ < -3:
+    while not state.integrator.logZ_live - state.integrator.logZ < -3:
         (state, rng_key), dead_info = one_step((state, rng_key), None)
         dead.append(dead_info)
         pbar.update(n_delete)  # Update progress bar
 
 # | anesthetic post-processing
-dead = jax.tree.map(
-    lambda *args: jnp.reshape(
-        jnp.stack(args, axis=0), (-1,) + args[0].shape[1:]
-    ),
-    *dead
-)
-live = state.sampler_state
-logL = np.concatenate((dead.logL, live.logL), dtype=float)
-logL_birth = np.concatenate((dead.logL_birth, live.logL_birth), dtype=float)
-data = np.concatenate((dead.particles, live.particles), dtype=float)
+from blackjax.ns.utils import finalise
+
+final = finalise(state, dead)
+logL = np.asarray(final.particles.loglikelihood, dtype=float)
+logL_birth = np.asarray(final.particles.loglikelihood_birth, dtype=float)
+data = np.asarray(final.particles.position, dtype=float)
 samples = NestedSamples(
     data, logL=logL, logL_birth=logL_birth, columns=columns, labels=labels
 )

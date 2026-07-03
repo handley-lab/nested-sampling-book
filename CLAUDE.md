@@ -6,7 +6,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is a Jupyter Book repository containing educational notebooks demonstrating nested sampling algorithms from the BlackJAX library. The book focuses on physics-motivated use cases and provides pedagogical examples of nested sampling implementations.
 
-The repository uses the nested sampling fork of BlackJAX from: https://github.com/handley-lab/blackjax (tag: `v0.1.0-beta`). This tag is for continuity while the merge into the main blackjax repository is in progress.
+The nested sampling code now lives in **main BlackJAX** (https://github.com/blackjax-devs/blackjax), in the `blackjax.ns` subpackage, with top-level entry points `blackjax.nss` (Nested Slice Sampling) and `blackjax.nsswig` (slice-within-Gibbs). It is **not yet in a tagged PyPI release**, so it must be installed from the `main` branch with `git` (see Installation). The older `handley-lab/blackjax` fork (`v0.1.0-beta`) is deprecated — do not reference it in new content.
+
+BlackJAX maintains a complementary [Sampling Book](https://blackjax-devs.github.io/sampling-book/) whose [Nested Sampling chapter](https://blackjax-devs.github.io/sampling-book/algorithms/nested-sampling/) is the upstream companion to this book; keep the API usage here consistent with it.
 
 ## Common Development Commands
 
@@ -25,8 +27,8 @@ jb build .
 
 ### Installation
 ```bash
-# Install the nested sampling fork of BlackJAX
-pip install git+https://github.com/handley-lab/blackjax.git@v0.1.0-beta
+# Install nested sampling from main BlackJAX (not yet on PyPI, so git is required)
+pip install git+https://github.com/blackjax-devs/blackjax.git
 
 # Install visualization dependencies (for examples)
 pip install anesthetic
@@ -36,7 +38,7 @@ pip install anesthetic
 
 1. Create a notebook in the appropriate directory:
    - `basic/` - Simple introductory examples
-   - `advanced/` - Complex implementations (GP, Random Walk NS)
+   - `advanced/` - More involved implementations (posterior repartitioning, Random Walk NS from primitives)
    - `physics/` - Physics-specific applications (supernovae, cosmology)
    - `scripts/` - Python scripts for standalone examples
 
@@ -87,13 +89,21 @@ algo = blackjax.nss(
 
 # Run sampling loop
 state = algo.init(initial_particles)
-while not converged:
-    state, dead_point = algo.step(rng_key, state)
-    # collect dead points
+dead_points = []
+while not state.integrator.logZ_live - state.integrator.logZ < -3:
+    rng_key, subkey = jax.random.split(rng_key)
+    state, info = algo.step(subkey, state)   # step returns (new_state, NSInfo)
+    dead_points.append(info)
 
-# Finalize results
-final_state = finalise(state, dead_points)
+# Finalize results: returns an NSInfo whose `.particles` is a StateWithLogLikelihood
+ns_run = finalise(state, dead_points)
 ```
+
+Key API notes for main BlackJAX (these changed from the old fork):
+- Running evidence lives on `state.integrator`: use `state.integrator.logZ` and `state.integrator.logZ_live` (not `state.logZ` / `state.logZ_live`). The standard stopping rule is `logZ_live - logZ < -3`.
+- `finalise(...)` returns an `NSInfo`; the particles are under `.particles`, so use `ns_run.particles.position`, `ns_run.particles.loglikelihood`, `ns_run.particles.loglikelihood_birth`.
+- `blackjax.ns.utils.sample(...)` returns a particle state — take `.position` for the resampled positions. `log_weights`/`ess`/`uniform_prior` also live in `blackjax.ns.utils`.
+- Custom inner kernels: use `blackjax.ns.from_mcmc.reject_constrained_step` + `blackjax.ns.from_mcmc.build_kernel` (the old `repeat_kernel` / `new_state_and_info` helpers no longer exist).
 
 ### Visualization with Anesthetic
 
@@ -102,9 +112,9 @@ Convert results to anesthetic format for plotting:
 import anesthetic
 
 nested_samples = anesthetic.NestedSamples(
-    data=final_state.particles,
-    logL=final_state.loglikelihood,
-    logL_birth=final_state.loglikelihood_birth,
+    data=ns_run.particles.position,
+    logL=ns_run.particles.loglikelihood,
+    logL_birth=ns_run.particles.loglikelihood_birth,
 )
 ```
 
@@ -116,10 +126,10 @@ Core dependencies (from `requirements.txt`):
 - `numpy` - For numerical operations
 
 Example notebooks may require additional packages:
-- `blackjax` (nested sampling fork)
+- `blackjax` (from main, via git — see Installation)
 - `anesthetic` - For nested sampling visualization
 - `jax`, `jax.numpy` - JAX framework
-- Physics-specific packages (e.g., `jax_supernovae` for supernovae examples)
+- Physics-specific packages (e.g., `cosmopower-jax` for the CMB example, `jax-bandflux`/`jax_supernovae` for supernovae)
 
 ## Notes
 

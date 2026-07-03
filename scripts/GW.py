@@ -13,7 +13,7 @@
 # | source venv/bin/activate
 # | pip install git+https://git.ligo.org/lscsoft/ligo-segments.git
 # | pip install git+https://github.com/kazewong/jim
-# | pip install git+https://github.com/handley-lab/blackjax.git@v0.1.0-beta
+# | pip install git+https://github.com/blackjax-devs/blackjax.git
 # | pip install anesthetic
 # | python GW.py
 # |```
@@ -172,15 +172,16 @@ _, ravel_fn = jax.flatten_util.ravel_pytree(
 )
 
 # | Initialize the Nested Sampling algorithm
-nested_sampler = blackjax.ns.adaptive.nss(
+nested_sampler = blackjax.nss(
     logprior_fn=logprior_fn,
     loglikelihood_fn=loglikelihood_fn,
-    n_delete=n_delete,
-    num_mcmc_steps=num_mcmc_steps,
-    ravel_fn=ravel_fn,
+    num_delete=n_delete,
+    num_inner_steps=num_mcmc_steps,
+    # NOTE: the old fork's `ravel_fn` kwarg is gone — main blackjax.nss ravels
+    # pytree particles internally, so it is no longer needed.
 )
 
-state = nested_sampler.init(particles, loglikelihood_fn)
+state = nested_sampler.init(particles)
 
 
 @jax.jit
@@ -194,31 +195,22 @@ def one_step(carry, xs):
 # | Run Nested Sampling
 dead = []
 with tqdm.tqdm(desc="Dead points", unit=" dead points") as pbar:
-    while not state.sampler_state.logZ_live - state.sampler_state.logZ < -3:
+    while not state.integrator.logZ_live - state.integrator.logZ < -3:
         (state, rng_key), dead_info = one_step((state, rng_key), None)
         dead.append(dead_info)
         pbar.update(n_delete)  # Update progress bar
 
 # | anesthetic post-processing
 from anesthetic import NestedSamples
+from blackjax.ns.utils import finalise
 import numpy as np
 
-dead = jax.tree.map(
-    lambda *args: jnp.reshape(
-        jnp.stack(args, axis=0), (-1,) + args[0].shape[1:]
-    ),
-    *dead,
-)
-live = state.sampler_state
+nsinfo = finalise(state, dead)
 
-logL = np.concatenate((dead.logL, live.logL), dtype=float)
-logL_birth = np.concatenate((dead.logL_birth, live.logL_birth), dtype=float)
-data = np.concatenate(
-    [
-        np.column_stack([v for v in dead.particles.values()]),
-        np.column_stack([v for v in live.particles.values()]),
-    ],
-    axis=0,
+logL = np.asarray(nsinfo.particles.loglikelihood, dtype=float)
+logL_birth = np.asarray(nsinfo.particles.loglikelihood_birth, dtype=float)
+data = np.column_stack(
+    [v for v in nsinfo.particles.position.values()]
 )
 
 samples = NestedSamples(

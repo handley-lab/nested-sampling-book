@@ -158,7 +158,6 @@ def integrate(nested_sampler, rng_key, sort=False):
         particles["weight"] = jnp.take_along_axis(particles["weight"], idx, -1)
     state = nested_sampler.init(
         particles,
-        loglikelihood,
     )
 
     @jax.jit
@@ -171,7 +170,7 @@ def integrate(nested_sampler, rng_key, sort=False):
     dead = []
     with tqdm.tqdm(desc="Dead points", unit=" dead points") as pbar:
         while (
-            not state.sampler_state.logZ_live - state.sampler_state.logZ < -3
+            not state.integrator.logZ_live - state.integrator.logZ < -3
         ):
             (state, rng_key), dead_info = one_step((state, rng_key), None)
             # (state, rng_key), dead_info = multi_steps((state, rng_key), None)
@@ -185,7 +184,7 @@ def integrate(nested_sampler, rng_key, sort=False):
 
 def plot(rng_key, final):
     rng_key, sample_key = jax.random.split(rng_key)
-    posterior_samples = sample(sample_key, final, 100)
+    posterior_samples = sample(sample_key, final, 100).position
     f, a = plt.subplots()
     a.plot(X, jax.vmap(partial(model, x=X))(posterior_samples).T, color="C0")
     a.errorbar(
@@ -238,19 +237,24 @@ prior, log_prob = build_prior(1)
 test_sample, ravel_fn = jax.flatten_util.ravel_pytree(
     prior.sample(seed=jax.random.PRNGKey(0))
 )
-nested_sampler = blackjax.ns.adaptive.nss(
+nested_sampler = blackjax.nss(
     logprior_fn=log_prob,
     loglikelihood_fn=loglikelihood,
-    n_delete=n_delete,
-    num_mcmc_steps=num_mcmc_steps,
-    ravel_fn=ravel_fn,
-    stepper=wrapped_stepper,
+    num_delete=n_delete,
+    num_inner_steps=num_mcmc_steps,
+    # NOTE: `ravel_fn` and `stepper` were fork-only kwargs not present in main
+    # blackjax.nss. `ravel_fn` is obsolete (nss ravels pytrees internally). The
+    # `stepper` here is the sorted / label-switching move for the mixture model;
+    # main nss has no top-level `stepper` seam, so this run currently omits it.
+    # Reproduce that behaviour with a custom `proposal` or a
+    # `blackjax.ns.from_mcmc` kernel (see advanced/RW_NS.ipynb) before relying
+    # on these Bayes factors.
 )
 
 state_model_1, final_1 = integrate(nested_sampler, rng_key, sort=True)
-initial_particles_bf = sample(rng_key, final_1, 1000)
+initial_particles_bf = sample(rng_key, final_1, 1000).position
 print(
-    f"N={final_1.particles["freq"].shape[1]} components, logZ={state_model_1.sampler_state.logZ:.2f}"
+    f"N={final_1.particles.position['freq'].shape[1]} components, logZ={state_model_1.integrator.logZ:.2f}"
 )
 plot(rng_key, final_1)
 
@@ -262,23 +266,28 @@ prior, log_prob = build_prior(2)
 test_sample, ravel_fn = jax.flatten_util.ravel_pytree(
     prior.sample(seed=jax.random.PRNGKey(0))
 )
-nested_sampler = blackjax.ns.adaptive.nss(
+nested_sampler = blackjax.nss(
     logprior_fn=log_prob,
     loglikelihood_fn=loglikelihood,
-    n_delete=n_delete,
-    num_mcmc_steps=num_mcmc_steps,
-    ravel_fn=ravel_fn,
-    stepper=wrapped_stepper,
+    num_delete=n_delete,
+    num_inner_steps=num_mcmc_steps,
+    # NOTE: `ravel_fn` and `stepper` were fork-only kwargs not present in main
+    # blackjax.nss. `ravel_fn` is obsolete (nss ravels pytrees internally). The
+    # `stepper` here is the sorted / label-switching move for the mixture model;
+    # main nss has no top-level `stepper` seam, so this run currently omits it.
+    # Reproduce that behaviour with a custom `proposal` or a
+    # `blackjax.ns.from_mcmc` kernel (see advanced/RW_NS.ipynb) before relying
+    # on these Bayes factors.
 )
 state_model_2, final_2 = integrate(nested_sampler, rng_key, sort=True)
 print(
-    f"N={final_2.particles["freq"].shape[1]} components, logZ={state_model_2.sampler_state.logZ:.2f}"
+    f"N={final_2.particles.position['freq'].shape[1]} components, logZ={state_model_2.integrator.logZ:.2f}"
 )
 plot(rng_key, final_2)
 ##################################################################
 
 print(
-    f"Bayes Factor: {state_model_2.sampler_state.logZ - state_model_1.sampler_state.logZ:.2f}"
+    f"Bayes Factor: {state_model_2.integrator.logZ - state_model_1.integrator.logZ:.2f}"
 )
 
 ##################################################################
@@ -313,13 +322,13 @@ def new_loglikelihood(theta):
     return loglikelihood(theta) - l_1
 
 
-nested_sampler = blackjax.ns.adaptive.nss(
+nested_sampler = blackjax.nss(
     logprior_fn=new_log_prior,
     loglikelihood_fn=new_loglikelihood,
-    n_delete=n_delete,
-    num_mcmc_steps=num_mcmc_steps,
-    ravel_fn=ravel_fn,
-    # stepper=wrapped_stepper,
+    num_delete=n_delete,
+    num_inner_steps=num_mcmc_steps,
+    # NOTE: `ravel_fn` (fork-only, now obsolete) dropped; main blackjax.nss
+    # ravels pytree particles internally.
 )
 
 prior_1, _ = build_prior(1)
@@ -336,7 +345,6 @@ initial_particles_bf["freq"] = jnp.concatenate(
 
 state = nested_sampler.init(
     initial_particles_bf,
-    new_loglikelihood,
 )
 
 
@@ -351,7 +359,7 @@ def one_step(carry, xs):
 dead = []
 
 with tqdm.tqdm(desc="Dead points", unit=" dead points") as pbar:
-    while not state.sampler_state.logZ_live - state.sampler_state.logZ < -3:
+    while not state.integrator.logZ_live - state.integrator.logZ < -3:
         (state, rng_key), dead_info = one_step((state, rng_key), None)
 
         dead.append(dead_info)
@@ -359,14 +367,18 @@ with tqdm.tqdm(desc="Dead points", unit=" dead points") as pbar:
 
 fs = finalise(state, dead)
 print("total evals:", fs.update_info.evals.sum())
-print("logZ:", state.sampler_state.logZ)
+print("logZ:", state.integrator.logZ)
 from anesthetic import NestedSamples
 
 samples = NestedSamples(
     data=jnp.concatenate(
-        [fs.particles["freq"], fs.particles["noise"][..., None]], axis=-1
+        [
+            fs.particles.position["freq"],
+            fs.particles.position["noise"][..., None],
+        ],
+        axis=-1,
     ),
-    logL=fs.logL,
-    logL_birth=fs.logL_birth,
+    logL=fs.particles.loglikelihood,
+    logL_birth=fs.particles.loglikelihood_birth,
 )
 samples.to_csv("BF.csv")

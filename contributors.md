@@ -7,7 +7,7 @@
     - Basic Usage - https://github.com/yallup
     - Best Practices - https://github.com/yallup
 - Advanced
-    - Gaussian Processes - https://github.com/yallup
+    - Posterior Repartitioning - https://github.com/yallup
     - Custom Inner Kernels - https://github.com/williamjameshandley and https://github.com/yallup
     - Simulation-Based Inference - https://github.com/williamjameshandley
     - Non-JAX Likelihood Integration - https://github.com/williamjameshandley
