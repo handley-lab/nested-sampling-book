@@ -2,7 +2,7 @@
 
 Nested Sampling is a particle Monte Carlo algorithm that has seen widespread usage in the physical sciences. Its popular implementations have often been performed in bespoke packages, which hinders wider adoption and generic comparison.
 
-The work of {cite}`yallup2026nested` presented the atomic components of the Nested Sampling paradigm in the style of the popular `jax` based sampling library `blackjax`. This has a number of benefits, including:
+The work of {cite}`Yallup2026` presented the atomic components of the Nested Sampling paradigm in the style of the popular `jax` based sampling library `blackjax`. This has a number of benefits, including:
 - Compatibility of the atomic components with modern python PPLs such as [numpyro](https://num.pyro.ai/en/latest/index.html#)
 - Clear separation of design choices from core algorithm, allowing advanced experimentation with composable components
 - Unique compatibility with natively vectorized likelihood code.
@@ -43,16 +43,19 @@ Usage of the core algorithm should cite both the `blackjax` repo {cite}`cabezas2
 }
 ```
 
-as well as the implementation paper {cite}`yallup2026nested`
+as well as the implementation paper {cite}`Yallup2026`
 
 ```latex
-@article{yallup2026nested,
-    title={Nested Slice Sampling: Vectorized Nested Sampling for {GPU}-Accelerated Inference},
-    author={David Yallup and Namu Kroupa and Will Handley},
-    journal={Transactions on Machine Learning Research},
-    issn={2835-8856},
-    year={2026},
-    url={https://openreview.net/forum?id=5mF2eRl3gt},
+@article{Yallup2026,
+  title         = {Nested Slice Sampling: Vectorized Nested Sampling for {GPU}-Accelerated Inference},
+  author        = {Yallup, David and Kroupa, Namu and Handley, Will},
+  journal       = {Transactions on Machine Learning Research},
+  year          = {2026},
+  issn          = {2835-8856},
+  url           = {https://openreview.net/forum?id=5mF2eRl3gt},
+  eprint        = {2601.23252},
+  archivePrefix = {arXiv},
+  primaryClass  = {stat.CO},
 }
 ```
 
