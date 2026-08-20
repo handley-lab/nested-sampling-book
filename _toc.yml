@@ -18,7 +18,7 @@ parts:
     - file: sbi/nle_posterior.ipynb
       title: Simulation-Based Inference
     - file: integrations/pytorch.ipynb
-      title: Non-JAX Likelihood Integration
+      title: PyTorch Integration
   - caption: Physics Examples
     chapters:
     - file: physics/CMB.ipynb
