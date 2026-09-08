@@ -52,6 +52,8 @@ as well as the implementation paper {cite}`Yallup2026`
   journal       = {Transactions on Machine Learning Research},
   year          = {2026},
   issn          = {2835-8856},
+  pages         = {arXiv:2601.23252},
+  doi           = {10.48550/arXiv.2601.23252},
   url           = {https://openreview.net/forum?id=5mF2eRl3gt},
   eprint        = {2601.23252},
   archivePrefix = {arXiv},
