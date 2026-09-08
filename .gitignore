@@ -34,3 +34,7 @@ Thumbs.db
 libmodel.so
 *.o
 *.a
+
+# Generated notebook outputs
+sbi/nested_samples.csv
+sbi-logs/
